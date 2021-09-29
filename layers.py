@@ -72,7 +72,7 @@ def param_group_splitter(model,bot_idx,linr_idx):
   upper_bottleneck = bottleneck[:hf_bottleneck_sz]
   lower_bottleneck = bottleneck[hf_bottleneck_sz:]
 
-  linr_grp = model[linr_idx]
+  linr_grp = model[linr_idx:]
 
   def _batchnorm_splitter(layer,target_grp,high_grp):
     if isinstance(layer,nn.BatchNorm2d): high_grp += ( list(layer.parameters()) )
