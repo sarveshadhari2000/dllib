@@ -17,9 +17,7 @@ class Learner():
     self.dls = dls
     self.cbs = cbs
 
-    for cb in self.cbs : 
-      cb.set_runner(self)
-      setattr(self,cb._name,cb)
+     
   
 
 
@@ -64,7 +62,9 @@ class Learner():
 
     self.epochs = epochs
 
-    for cb in self.cbs : cb.set_runner(self)
+    for cb in self.cbs : 
+      cb.set_runner(self)
+      setattr(self,cb._name,cb)
 
     self.total_iters = len(self.dls['train']) * self.epochs
 
