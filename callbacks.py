@@ -7,6 +7,97 @@ import math
 from torch.distributions import Beta
 import matplotlib.pyplot as plt
 
+class TextLearner():
+
+  def __init__(self,model,opt,criterion,dls,cbs=None,grad_accumulation=1):
+    
+    self.model = model
+    self.opt = opt
+    self.criterion = criterion
+    self.dls = dls
+    self.cbs = cbs
+    self.grad_accumulation = grad_accumulation
+
+     
+  
+
+
+  def __call__(self,k):
+
+    for cb in sorted(self.cbs,key=lambda x:x._order,reverse=False):
+      cb(k)
+
+
+  
+  def one_batch(self,i,x,y):
+
+    self.bs = x.shape[0]
+
+    self.x,self.labels = x,y
+    self.bi = i
+    
+    if self('before_batch'): return 
+    
+    
+    self.preds = self.model(**self.x)
+
+
+    self.loss = ( self.criterion(self.preds,self.labels)/self.grad_accumulation )
+
+    if self.in_train:
+
+      self.loss.backward()
+      
+      if ( (i+1)%self.grad_accumulation ) == 0 :
+        self.opt.step()
+        self.opt.zero_grad()
+      
+    
+    
+    if self('after_batch'): return
+    
+  def all_batches(self,dl):
+
+    self.opt.zero_grad()
+
+    for i,(x,y) in enumerate(self.c_dl):
+      self.one_batch(i,x,y)
+  
+  def fit(self,epochs):
+
+    self.epochs = epochs
+
+    for cb in self.cbs : 
+      cb.set_runner(self)
+      setattr(self,cb._name,cb)
+
+    self.total_iters = len(self.dls['train']) * self.epochs
+
+    if self('before_fit'): return 
+
+    for epoch in range(epochs):
+
+      self.c_dl = self.dls['train']
+      
+      if self('before_epoch'):return
+
+      self.all_batches(self.dls['train'])
+
+
+      self.c_dl = self.dls['validate']
+      if self('before_validate'):return 
+
+      with torch.no_grad():
+        self.all_batches(self.dls['validate'])
+      
+      if self('after_validate'): return
+      
+      if self('after_epoch'):return
+    
+    if self('after_fit'): return 
+
+    
+
 class Learner():
 
   def __init__(self,model,opt,criterion,dls,cbs=None):
@@ -90,6 +181,7 @@ class Learner():
       if self('after_epoch'):return
     
     if self('after_fit'): return 
+
 
 
 class Callbacks():
