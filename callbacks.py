@@ -137,7 +137,7 @@ class TextLearner():
 
       self.loss.backward()
       
-      if ( (i+1)%self.grad_accumulation ) == 0 :
+      if ( ( (i+1)%self.grad_accumulation ) == 0 ) or ( (i+1) == len( self.dls['train'] ) ) :
         self.opt.step()
         self.opt.zero_grad()
     
